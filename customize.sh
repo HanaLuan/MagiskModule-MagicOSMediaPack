@@ -82,16 +82,16 @@ check_android
 # 判断安卓版本是否大于30
 if [ "$API" -gt 30 ]; then
   # 检查vendor文件夹是否存在，不存在则创建
-  if [ ! -d "$MODPATH/system/vendor" ]; then
-    mkdir -p "$MODPATH/system/vendor"
+  if [ ! -d "$MODPATH/system/product" ]; then
+    mkdir -p "$MODPATH/system/product"
   fi
 
   # 移动media文件夹到vendor目录
-  mv "$MODPATH/system/media" "$MODPATH/system/vendor/"
+  mv "$MODPATH/system/media" "$MODPATH/system/product/"
 
   # 显示完成操作
   ui_print "   - Detected Android 11+"
-  ui_print "   - Media folder moved to vendor directory. [from /system/media to /system/vendor/media.]"
+  ui_print "   - Media folder moved to vendor directory. [from /system/media to /system/product/media.]"
 else
   # 显示不需要移动
   ui_print "   - No need to move media folder. API level is $API!"
