@@ -88,37 +88,55 @@ ui_print "Setting permissions for all files and directories in the media folder.
 set_perm_recursive "$MODPATH/system/media" 0 0 0755 0644 u:object_r:system_file:s0
 
 # 提示用户是否保留自定义开机动画
-ui_print "************************"
-ui_print "Do you want to keep the custom boot animation?"
-ui_print "Press Volume Up (+) to keep it or Volume Down (-) to remove it."
-ui_print "You have 30 seconds to make your choice."
-ui_print "************************"
-
 # 设置一个超时限制（30秒），默认不保留开机动画
 TIMEOUT=30
 CHOICE="no"
+KEYPRESS_FILE="$MODPATH/keypress.log"
+# 清空 keypress.txt 文件
+> "$KEYPRESS_FILE"
+ui_print "************************"
+ui_print "Do you want to keep the custom boot animation?"
+ui_print "Press Volume Up (+) to keep it or Volume Down (-) to remove it."
+ui_print "You have $TIMEOUT seconds to make your choice."
+ui_print "************************"
 
-# 使用 getevent 监听音量键，最多等待 30 秒
+# 使用 getevent 监听音量键，最多等待 $TIMEOUT 秒
+(
+  for i in $(seq 1 $TIMEOUT); do
+    # 检查音量键（VOLUMEUP是音量+ VOLUMEDOWN是音量-）
+    keypress=$(getevent -lc 1 2>&1 | grep VOLUME | grep " DOWN")
+
+    # 如果检测到音量增大键
+    if echo "$keypress" | grep -q "VOLUMEUP"; then
+      echo "yes" > "$KEYPRESS_FILE"
+      break
+    fi
+
+    # 如果检测到音量减小键
+    if echo "$keypress" | grep -q "VOLUMEDOWN"; then
+      echo "no" > "$KEYPRESS_FILE"
+      break
+    fi
+
+    # 每秒检查一次
+    sleep 1
+  done
+) &
+
+# 使用 sleep 等待超时
+# sleep $TIMEOUT
 for i in $(seq 1 $TIMEOUT); do
-  # 检查音量键是否被按下
-  keypress=$(getevent -lc 1 2>&1 | grep VOLUMEUP | grep " DOWN")
-
-  if [ ! -z "$keypress" ]; then
-    # 用户按下了音量增大键
-    CHOICE="yes"
+  ui_print "正在等待, 第 $i 秒..."
+  if [ -s "$KEYPRESS_FILE" ]; then
     break
   fi
-
-  # 如果用户按了音量减小键，也认为用户选择不保留开机动画
-  keypress=$(getevent -lc 1 2>&1 | grep VOLUMEDOWN | grep " DOWN")
-  if [ ! -z "$keypress" ]; then
-    CHOICE="no"
-    break
-  fi
-
-  # 每秒检查一次
   sleep 1
 done
+
+# 读取用户输入
+if [ -f "$KEYPRESS_FILE" ]; then
+  CHOICE=$(cat "$KEYPRESS_FILE")
+fi
 
 # 判断用户是否选择保留开机动画
 if [ "$CHOICE" == "yes" ]; then
@@ -131,18 +149,18 @@ fi
 
 # 判断安卓版本是否大于30
 if [ "$API" -gt 30 ]; then
-  # 检查 vendor 文件夹是否存在，不存在则创建
+  # 检查 product 文件夹是否存在，不存在则创建
   if [ ! -d "$MODPATH/system/product" ]; then
     mkdir -p "$MODPATH/system/product"
   fi
 
-  # 移动 media 文件夹到 vendor 目录
+  # 移动 media 文件夹到 product 目录
   set_perm_recursive "$MODPATH/system/product" 0 0 0755 0644 u:object_r:system_file:s0
   mv "$MODPATH/system/media" "$MODPATH/system/product/"
 
   # 显示完成操作
   ui_print "   - Detected Android 11+"
-  ui_print "   - Media folder moved to vendor directory. [from /system/media to /system/product/media.]"
+  ui_print "   - Media folder moved to product directory. [from /system/media to /system/product/media.]"
 else
   # 显示不需要移动
   ui_print "   - No need to move media folder. API level is $API!"
