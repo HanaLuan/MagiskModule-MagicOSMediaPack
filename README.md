@@ -1,8 +1,8 @@
 
-# EMUI Media Pack
+# MagicOS Media Pack (Honor Spec)
 
-`呢個係一個由 EMUI 3 ~ HarmonyOS 2 提取出嚟嘅系統鈴聲同提示音合集`  
-`This is a collection of system ringtones and notification sounds extracted from EMUI 3 ~ HarmonyOS 2`
+`呢個係一個由 EMUI 3 ~ HarmonyOS 2 以及 MagicOS 9.0 提取出嚟嘅系統鈴聲同提示音合集`  
+`This is a collection of system ringtones and notification sounds extracted from EMUI 3 ~ HarmonyOS 2 and MagicOS 9.0`
 
 ----
 
